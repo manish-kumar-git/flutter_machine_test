@@ -35,7 +35,7 @@ class Auth {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context)=>MapScreen()));
                   },
                   child: const Text(
                     'Continue',
