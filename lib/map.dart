@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_machine_test/auth.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,20 +11,26 @@ class MapScreen extends StatefulWidget {
 }
 
 class _MapScreenState extends State<MapScreen> {
-  final Set<Marker> _markers = Set();
   CameraPosition _initialPosition =
-      CameraPosition(target: LatLng(20.5937, 78.9629), zoom: 10);
+      CameraPosition(target: LatLng(73.8215083, 18.6378567), zoom: 10);
   Completer<GoogleMapController> _controller = Completer();
 
   void _onMapCreated(GoogleMapController controller) {
     _controller.complete(controller);
   }
 
+  bool loading = true;
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-     Auth().getLocation();
+    Auth().getLocation();
+    Future.delayed(Duration(seconds: 2), () {
+      loading = false;
+    setState(() {
+      
+    });
+    });
   }
 
   MapType _currentMapType = MapType.normal;
@@ -37,10 +44,11 @@ class _MapScreenState extends State<MapScreen> {
           elevation: 10,
           backgroundColor: const Color.fromRGBO(143, 148, 251, .6),
         ),
-        body: Stack(
+        body: loading?const Center(child: CupertinoActivityIndicator()):
+        Stack(
           children: <Widget>[
             GoogleMap(
-                markers: _markers,
+                markers: markers,
                 mapType: _currentMapType,
                 onMapCreated: _onMapCreated,
                 initialCameraPosition: _initialPosition),
@@ -62,11 +70,11 @@ class _MapScreenState extends State<MapScreen> {
                 alignment: Alignment.centerRight,
                 child: FloatingActionButton(
                   onPressed: () {
-                   
-                    _goToNewYork();
+                    setState(() {});
+                    _goTo();
                   },
                   materialTapTargetSize: MaterialTapTargetSize.padded,
-                  backgroundColor: Color.fromARGB(209, 137, 64, 233),
+                  backgroundColor: const Color.fromARGB(209, 137, 64, 233),
                   child: const Icon(Icons.gps_not_fixed_outlined, size: 30.0),
                 ),
               ),
@@ -85,19 +93,11 @@ class _MapScreenState extends State<MapScreen> {
     });
   }
 
-  Future<void> _goToNewYork() async {
-    double? lat = geoLat;
-    double? long = geoLon;
+  Future<void> _goTo() async {
+    double? lat = geoLat[0];
+    double? long = geoLon[0];
     GoogleMapController controller = await _controller.future;
-    controller.animateCamera(CameraUpdate.newLatLngZoom(LatLng(lat!, long!), 10));
-    setState(() {
-      _markers.add(
-        Marker(
-          markerId: MarkerId('newyork'),
-          position: LatLng(lat, long),
-          infoWindow: InfoWindow(title: contractor,snippet: '$lat, $long')
-        ),
-      );
-    });
+    controller
+        .animateCamera(CameraUpdate.newLatLngZoom(LatLng(lat!, long!), 0));
   }
 }

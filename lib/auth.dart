@@ -4,11 +4,13 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_machine_test/main.dart';
 import 'package:flutter_machine_test/map.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-String? token, contractor;
-double? geoLat, geoLon;
+String? token;
+List geoLat = [], geoLon = [], contractor = [];
+final Set<Marker> markers = {};
 
 class Auth {
   Future logIn(var email, var password, BuildContext ctx) async {
@@ -35,7 +37,8 @@ class Auth {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10)),
                   onPressed: () {
-                    Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context)=>MapScreen()));
+                    Navigator.pushReplacement(context,
+                        CupertinoPageRoute(builder: (context) => MapScreen()));
                   },
                   child: const Text(
                     'Continue',
@@ -66,13 +69,21 @@ class Auth {
           await http.get(url, headers: {'Authentication': 'Bearer $token'});
       var responseData = jsonDecode(response.body);
 
-      var fin = jsonDecode(responseData[0]['geojson']);
-      
       if (response.statusCode == 200) {
-        geoLat = fin['geometry']['coordinates'][0];
-      geoLon = fin['geometry']['coordinates'][1];
-      contractor = fin['properties']['contractor'];
-        print("SUCCESSS   $fin ");
+        for (int i = 0; i < responseData.length; i++) {
+          var fin = jsonDecode(responseData[i]['geojson']);
+          geoLat.add(fin['geometry']['coordinates'][0]);
+          geoLon.add(fin['geometry']['coordinates'][1]);
+          contractor.add(fin['properties']['contractor'] ?? ' ');
+          markers.add(
+            Marker(
+                markerId: const MarkerId('Contractor'),
+                position: LatLng(geoLat[i], geoLon[i]),
+                infoWindow: InfoWindow(
+                    title: contractor[i],
+                    snippet: '${geoLat[i]}, ${geoLon[i]}')),
+          );
+        }
       }
     } catch (e) {
       print(e);
